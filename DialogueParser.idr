@@ -1,12 +1,10 @@
 -- Local Variables:
--- idris-load-packages: ("effects" "lightyear")
+-- idris-load-packages: ("lightyear" "effects")
 -- End:
 
 module DialogueParser
 
-import public Lightyear
-import public Lightyear.Char
-import public Lightyear.Strings
+import Data.Vect
 import public Effect.Random
 import public Effect.StdIO
 import public Effects
@@ -139,22 +137,14 @@ parseDialogue s =
     Just dlg => dlg
     Nothing => Elaborate
 
-getSeed : Eff Integer [SYSTEM]
-getSeed = time  
-
-initialize : IO Integer
-initialize = assert_total (run getSeed)
+getSeed : IO Integer
+getSeed = assert_total (run time)
 
 listenAndReply : Integer -> Eff () [RND, STDIO]
 listenAndReply seed = do
   srand seed
-  print "Eliza> "
+  putStr "Eliza> "
   listen <- getStr
-  let dialogue = parseDialogue listen
+  let dialogue = parseDialogue (Strings.toLower listen)
   selectedReply <- reply dialogue
-  print selectedReply
-
-main : IO ()
-main = do
-  seed <- initialize
-  run (listenAndReply seed)
+  putStrLn selectedReply
