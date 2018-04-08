@@ -11,15 +11,15 @@ import Data.String
 import DialogueParser
 
 data Eliza : Type where
-  Conversation : IO a -> (a -> Inf Eliza) -> Eliza
+  Conversation : IO a -> Inf Eliza -> Eliza
 
 data KeepRunning = Stop | Continue (Lazy KeepRunning)
 
 total
 runConversation : KeepRunning -> Eliza -> IO ()
-runConversation (Continue rest) (Conversation c f) = do
-  res <- c
-  runConversation rest (f res)
+runConversation (Continue rest) (Conversation ioInteraction conv) = do
+  ioInteraction
+  runConversation rest conv
 runConversation Stop comp = pure ()
 
 runForever : KeepRunning
@@ -27,7 +27,7 @@ runForever = Continue runForever
 
 total
 conversation : Eliza
-conversation = Conversation (getSeed >>= (\seed => run (listenAndReply seed))) (\_ => conversation)
+conversation = Conversation (getSeed >>= (\seed => run (listenAndReply seed))) conversation
 
 main : IO ()
 main = runConversation runForever conversation

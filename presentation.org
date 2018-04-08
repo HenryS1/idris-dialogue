@@ -88,11 +88,11 @@ Please elaborate...
    #+NAME: Eliza
    #+BEGIN_SRC idris
    data Eliza : Type where
-     Conversation : IO a -> (a -> Inf Eliza) -> Eliza
+     Conversation : IO a -> Inf Eliza -> Eliza
 
    conversation : Eliza
    conversation = Conversation (getSeed >>=
-     (\seed => run (listenAndReply seed))) (\_ => conversation)
+     (\seed => run (listenAndReply seed))) conversation
 
    -- conversation is total
    λΠ> :total conversation
@@ -111,9 +111,10 @@ Please elaborate...
    data KeepRunning = Stop | Continue (Lazy KeepRunning)
 
    runConversation : KeepRunning -> Eliza -> IO ()
-   runConversation (Continue rest) (Conversation c f) = do
-     res <- c
-     runConversation rest (f res)
+   runConversation (Continue rest)
+     (Conversation ioInteraction conv) = do
+       ioInteraction
+       runConversation rest conv
    runConversation Stop comp = pure ()
 
    λΠ> :total runConversation
