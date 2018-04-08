@@ -20,10 +20,10 @@ Parts : Type
 Parts = List Tokens
 
 data Dialogue a = Hello
-  | Want a a
-  | Was a a
-  | Feel a a
-  | Felt a a
+  | Want a
+  | Was a
+  | Feel a
+  | Felt a
   | Elaborate
 
 joinSpace : List String -> String
@@ -35,10 +35,10 @@ Seed = Integer
 replyWant : Tokens -> Eff String [RND]
 replyWant tokens = 
   let joined = joinSpace tokens
-      replies : Vect 4 String = ["What would it mean to you if you got " ++ joined,
-        "Have you considered why it is that you want " ++ joined,
-        "If you got " ++ joined ++ " would it really make you feel better about yourself?",
-        "How would it change things if you got " ++ joined]
+      replies : Vect 4 String = ["What would it mean to you if you got " ++ joined ++ "?",
+        "Have you considered why it is that you want " ++ joined ++ "?",
+        "If you got " ++ joined ++ " would it make you feel better about yourself?",
+        "How would it change things if you got " ++ joined ++ "?"]
   in rndSelect' replies 
 
 replyHello : Eff String [RND]
@@ -47,41 +47,40 @@ replyHello = rndSelect' ["Hello, how are you doing?", "Please, lets begin.",
 
 replyWas : Tokens -> Eff String [RND]
 replyWas tokens = let joined = joinSpace tokens
-  in rndSelect' ["Why is it no longer the case that " ++ joined,
-      "Do you wish it was still the case that " ++ joined]
+  in rndSelect' ["Why is it no longer the case that " ++ joined ++ "?",
+      "Do you wish it was still the case that " ++ joined ++ "?"]
 
 replyFeel : Tokens -> Eff String [RND]
 replyFeel tokens = let joined = joinSpace tokens
   in rndSelect' ["How long have you felt this way?",
-    "Do you think it's a good thing that you feel " ++ joined,
-    "Would it be better if you didn't have these feelings?"]
+    "Do you think it's a good thing that you feel " ++ joined ++ "?",
+    "Would it be better if you didn't feel " ++ joined ++ "?"]
 
 replyFelt : Eff String [RND]
 replyFelt  = rndSelect' ["Why do you think that you no longer feel this way?",
   "Do you want to feel like that again?"]
   
 replyElaborate : Eff String [RND]
-replyElaborate = rndSelect' ["Please continue, I'm finding our discussion most enlightening",
-  "We are making excellent progress, please don't stop sharing your thoughts",
-  "Could you provide me with more detail?",
-  "Do you feel that this line of discussion is helpful to you?"]
+replyElaborate = rndSelect' ["Please provide me with more detail.",
+  "Please elaborate...",
+  "Please share more."]
 
 reply : Dialogue Tokens -> Eff String [RND]
 reply dlg = 
   case dlg of
     Hello => replyHello
-    Want subj obj => replyWant obj
-    Was subj obj => replyWas obj
-    Feel subj obj => replyFeel obj
-    Felt subj obj => replyFelt 
+    Want obj => replyWant obj
+    Was obj => replyWas obj
+    Feel obj => replyFeel obj
+    Felt obj => replyFelt 
     Elaborate => replyElaborate 
 
 Functor Dialogue where
   map f Hello = Hello 
-  map f (Want subj obj) = Want (f subj) (f obj)
-  map f (Was subj obj) = Was (f subj) (f obj)
-  map f (Feel subj obj) = Feel (f subj) (f obj)
-  map f (Felt subj obj) = Felt (f subj) (f obj)
+  map f (Want obj) = Want (f obj)
+  map f (Was obj) = Was (f obj)
+  map f (Feel obj) = Feel (f obj)
+  map f (Felt obj) = Felt (f obj)
   map f Elaborate = Elaborate
 
 DlgParser : Type
@@ -93,15 +92,15 @@ tokenize = words
 parts : String -> Tokens -> Parts
 parts sep tokens = List.split (== sep) tokens
 
-dialogue : String -> (Tokens -> Tokens -> Dialogue Tokens) -> Tokens -> Maybe (Dialogue Tokens)
+dialogue : String -> (Tokens -> Dialogue Tokens) -> Tokens -> Maybe (Dialogue Tokens)
 dialogue sep dlg tokens = if not (sep `elem` tokens)
   then Nothing
   else case parts sep tokens of
-    (subject :: [object]) => Just (dlg subject object)
+    (subject :: [object]) => Just (dlg object)
     _ => Nothing
 
 hello : DlgParser
-hello = dialogue "hello" (\a, b => Hello)
+hello = dialogue "hello" (\a => Hello)
 
 want : DlgParser
 want = dialogue "want" Want
@@ -115,9 +114,16 @@ feel = dialogue "feel" Feel
 felt : DlgParser
 felt = dialogue "felt" Felt
 
+replaceIMe : Dialogue Tokens -> Dialogue Tokens
+replaceIMe = map (\tokens =>
+  map (\token => if token `List.elem` ["I", "me"] then "you" else token) tokens)
+
+replaceMy : Dialogue Tokens -> Dialogue Tokens
+replaceMy = map (\tokens =>
+  map (\token => if token == "my" then "your" else token) tokens)
+
 switchViewpoint : Dialogue Tokens -> Dialogue Tokens
-switchViewpoint dlg = map (\tokens =>
-  map (\token => if token `List.elem` ["I", "me"] then "you" else token) tokens) dlg
+switchViewpoint = replaceIMe . replaceMy
 
 combine : DlgParser -> DlgParser -> DlgParser
 combine one other = \tokens => case one tokens of

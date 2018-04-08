@@ -1,0 +1,143 @@
+#+OPTIONS: num:nil toc:nil time-stamp-file:nil
+#+AUTHOR: Henry Steere
+#+TITLE: Totally Interactive Idris
+
+* Idris quick intro
+
+  #+CAPTION: Idris is a Dragon...
+  [[./idrisAndIvor.jpg]]
+
+** And a dependently typed language
+
+   This means that types are parameterized by values
+
+   #+NAME: Simple dependent types
+   #+BEGIN_SRC idris
+-- List With length 5
+nums : Vect 5
+nums = [1, 2, 3, 4, 5]
+
+-- NonEmpty lists
+λΠ> :t head
+Prelude.List.head : (l : List a) -> {auto ok : NonEmpty l} -> a
+   #+END_SRC
+
+*** With a totality checker
+
+   #+NAME: Bad factorial
+   #+BEGIN_SRC idris
+-- loops forever if n is less than 10
+factorial : Int -> Int
+factorial 0 = 1
+factorial n = n * factorial (n - 1)
+
+-- Idris' compiler can detect this
+λΠ> :total factorial
+Main.factorial is possibly not total due to recursive path:
+    Main.factorial, Main.factorial
+   #+END_SRC
+
+* Interactive IO
+  Interactive programs often continue forever
+
+   #+NAME: Interactive IO
+   #+BEGIN_SRC idris
+sayHello : IO ()
+sayHello = do
+  name <- getStr
+  print "Hello " ++ name ++ "!"
+  sayHello
+
+λΠ> :total sayHello
+Main.sayHello is possibly not total due to recursive path:
+    Main.sayHello, Main.sayHello
+   #+END_SRC
+
+   Oh bother...
+
+** Redefine the problem...
+
+   We decide to call an infinite process total if it produces a value
+   before making a recursive call. This guarantees that looping IO is
+   at least useful.
+
+* Eliza
+
+  Eliza was a very early AI application, a chat bot that emulated a
+  psychologist. 
+
+   #+NAME: Eliza
+   #+BEGIN_SRC text
+Eliza> Hello
+What's on your mind?
+Eliza> I want more money.
+Why do you think you want more money?
+Eliza> Because I'm greedy!
+Please elaborate...
+   #+END_SRC
+
+   Eliza listens and replies with a random response from the available
+   reponses using some of the provided input.
+
+** REPL
+  
+   Define a datatype that represents a potentially infinite process,
+   using Idris' Inf type. Then define a function that
+   produces a value with this type.
+   
+   #+NAME: Eliza
+   #+BEGIN_SRC idris
+   data Eliza : Type where
+     Conversation : IO a -> (a -> Inf Eliza) -> Eliza
+
+   conversation : Eliza
+   conversation = Conversation (getSeed >>=
+     (\seed => run (listenAndReply seed))) (\_ => conversation)
+
+   -- conversation is total
+   λΠ> :total conversation
+   Main.conversation is Total
+   #+END_SRC
+
+*** Provide a function to evaluate the process
+
+    So far we don't have output. We need an evaluator that turns the
+    Eliza values into IO. The KeepRunning datatype gives a way for the
+    computation to possibly stop so that Idris' totality checker can
+    be satisfied.
+
+   #+NAME: Eliza
+   #+BEGIN_SRC idris
+   data KeepRunning = Stop | Continue (Lazy KeepRunning)
+
+   runConversation : KeepRunning -> Eliza -> IO ()
+   runConversation (Continue rest) (Conversation c f) = do
+     res <- c
+     runConversation rest (f res)
+   runConversation Stop comp = pure ()
+
+   λΠ> :total runConversation
+   Main.runConversation is Total
+   #+END_SRC
+
+*** Run forever
+
+     Finally run the dialogue. This function is not total, but we know
+     that every part of it is.
+
+   #+NAME: Eliza
+   #+BEGIN_SRC idris
+   -- continue over and over
+   runForever : KeepRunning
+   runForever = Continue runForever
+   
+   main : IO ()
+   main = runConversation runForever conversation
+
+   λΠ> :total main
+   Main.main is possibly not total due to:
+    Main.runForever, which is possibly not total due to recursive path:
+    Main.runForever
+   #+END_SRC
+
+* Quick Demo
