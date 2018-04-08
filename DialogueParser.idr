@@ -47,8 +47,8 @@ replyHello = rndSelect' ["Hello, how are you doing?", "Please, lets begin.",
 
 replyWas : Tokens -> Eff String [RND]
 replyWas tokens = let joined = joinSpace tokens
-  in rndSelect' ["Why is it no longer the case that " ++ joined ++ "?",
-      "Do you wish it was still the case that " ++ joined ++ "?"]
+  in rndSelect' ["Is that no longer the case?",
+      "Do you wish that was still the case?"]
 
 replyFeel : Tokens -> Eff String [RND]
 replyFeel tokens = let joined = joinSpace tokens
@@ -116,7 +116,7 @@ felt = dialogue "felt" Felt
 
 replaceIMe : Dialogue Tokens -> Dialogue Tokens
 replaceIMe = map (\tokens =>
-  map (\token => if token `List.elem` ["I", "me"] then "you" else token) tokens)
+  map (\token => if token `List.elem` ["i", "me"] then "you" else token) tokens)
 
 replaceMy : Dialogue Tokens -> Dialogue Tokens
 replaceMy = map (\tokens =>
@@ -151,6 +151,6 @@ listenAndReply seed = do
   srand seed
   putStr "Eliza> "
   listen <- getStr
-  let dialogue = parseDialogue (Strings.toLower listen)
+  let dialogue = switchViewpoint (parseDialogue (Strings.toLower listen))
   selectedReply <- reply dialogue
   putStrLn selectedReply
