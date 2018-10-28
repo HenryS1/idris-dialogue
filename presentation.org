@@ -57,9 +57,9 @@ Main.sayHello is possibly not total due to recursive path:
 
 ** Redefine the problem...
 
-   We decide to call an infinite process total if it produces a value
-   before making a recursive call. This guarantees that looping IO is
-   at least useful.
+   Instead of trying to have totality make sure the process produces a
+   value before making a recursive call. This guarantees that looping
+   IO is at least useful.
 
 * Eliza
 
