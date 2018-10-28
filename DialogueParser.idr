@@ -52,9 +52,9 @@ replyWas tokens = let joined = joinSpace tokens
 
 replyFeel : Tokens -> Eff String [RND]
 replyFeel tokens = let joined = joinSpace tokens
-  in rndSelect' ["How long have you felt this way?",
+  in rndSelect' ["Does anything else make you feel this way?",
     "Do you think it's a good thing that you feel " ++ joined ++ "?",
-    "Would it be better if you didn't feel " ++ joined ++ "?"]
+    "What if you didn't feel " ++ joined ++ "?"]
 
 replyFelt : Eff String [RND]
 replyFelt  = rndSelect' ["Why do you think that you no longer feel this way?",
