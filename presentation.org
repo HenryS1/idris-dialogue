@@ -1,10 +1,10 @@
 #+OPTIONS: num:nil toc:nil time-stamp-file:nil
 #+AUTHOR: Henry Steere
-#+TITLE: Totally Interactive Idris
+#+TITLE: Eliza in Idris
 
 * Idris quick intro
 
-  #+CAPTION: Idris is a Dragon...
+** Idris is a dragon
   [[./idrisAndIvor.jpg]]
 
 ** And a dependently typed language
@@ -142,3 +142,5 @@ Please elaborate...
    #+END_SRC
 
 * Quick Demo
+* Credits
+  Based on material from chapter 11 of Edwin Brady's book Type Driven Development with Idris
