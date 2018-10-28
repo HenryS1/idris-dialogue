@@ -141,6 +141,5 @@ Please elaborate...
     Main.runForever
    #+END_SRC
 
-* Quick Demo
 * Credits
   Based on material from chapter 11 of Edwin Brady's book Type Driven Development with Idris
