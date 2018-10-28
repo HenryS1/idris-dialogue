@@ -1,5 +1,5 @@
 -- Local Variables:
--- idris-load-packages: ("lightyear" "effects")
+-- idris-load-packages: ("effects")
 -- End:
 
 module DialogueParser
