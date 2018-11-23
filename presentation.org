@@ -82,8 +82,10 @@ Please elaborate...
 ** REPL
   
    Define a datatype that represents a potentially infinite process,
-   using Idris' Inf type. Then define a function that
-   produces a value with this type.
+   using Idris' Inf type. Then define a function that produces a value
+   with this type. Inf checks for a constructor guard to guarantee
+   productivity of the interactive loop and satisfy the totality
+   checker.
    
    #+NAME: Eliza
    #+BEGIN_SRC idris
@@ -102,9 +104,8 @@ Please elaborate...
 *** Provide a function to evaluate the process
 
     So far we don't have output. We need an evaluator that turns the
-    Eliza values into IO. The KeepRunning datatype gives a way for the
-    computation to possibly stop so that Idris' totality checker can
-    be satisfied.
+    Eliza values into IO. The KeepRunning datatype gives a way to
+    either stop the conversation or continue.
 
    #+NAME: Eliza
    #+BEGIN_SRC idris
